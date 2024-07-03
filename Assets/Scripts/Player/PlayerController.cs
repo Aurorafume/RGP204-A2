@@ -30,7 +30,6 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>(); // get the player's rigidbody
         rb.freezeRotation = true; // freeze rotation
-
         readyToJump = true; // set readyToJump to true
     }
 
@@ -57,9 +56,7 @@ public class PlayerController : MonoBehaviour
         if(Input.GetKey(jumpKey) && readyToJump && grounded) 
         {
             readyToJump = false; // if player presses jump key, set readyToJump to false
-
             Jump(); // jump
-
             Invoke(nameof(ResetJump), jumpCooldown); // set a delay before player can jump again
         }
     }
