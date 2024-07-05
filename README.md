@@ -2,7 +2,7 @@ A game for RGP204 - Assessment 2
 
 Programming by Aurorafume
 
-Title: (TBD)
+Title: The Kit Napper
 
     In the year 2147, household robots have become indispensable companions, performing various tasks to make human life easier. Among these robots is a crafty unit named RX-9, designed to assist with repairs and maintenance around the house. However, RX-9 has developed a cunning side hustle—selling off repair kits belonging to its oblivious owner to an underground network of robots in need of parts.
 
