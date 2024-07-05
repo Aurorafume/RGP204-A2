@@ -90,4 +90,13 @@ public class PlayerController : MonoBehaviour
     {
         readyToJump = true; // set readyToJump to true
     }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("RepairKit"))
+        {
+            FindObjectOfType<GameManager>().CollectRepairKit(); // call CollectRepairKit function from GameManager
+            Destroy(other.gameObject); // destroy the repair kit
+        }
+    }
 }
