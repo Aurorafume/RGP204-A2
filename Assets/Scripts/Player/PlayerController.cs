@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -30,12 +31,21 @@ public class PlayerController : MonoBehaviour
     Rigidbody rb; // player's rigidbody
     private Vector3 originalScale; // original scale of the player
 
+    private Camera playerCamera; // camera used for raycasting
+    public Text pickupText; // UI text element for pickup prompt
+    public Text openText; // UI text element for open prompt
+    public float interactionRange = 3f; // range within which the player can interact with objects
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>(); // get the player's rigidbody
         rb.freezeRotation = true; // freeze rotation
         readyToJump = true; // set readyToJump to true
         originalScale = transform.localScale; // store the original scale of the player
+
+        playerCamera = Camera.main; // get the main camera
+        pickupText.enabled = false; // initially hide the pickup text
+        openText.enabled = false; // initially hide the open text
     }
 
     private void Update()
@@ -48,6 +58,9 @@ public class PlayerController : MonoBehaviour
             rb.drag = groundDrag; // if player is grounded, add ground drag
         else
             rb.drag = 0; // else, remove ground drag
+
+        CheckForClick(); // check for mouse click
+        CheckForPickupOrOpen(); // check if player is looking at a repair kit or interactable object
     }
 
     private void FixedUpdate()
@@ -141,12 +154,52 @@ public class PlayerController : MonoBehaviour
         transform.localScale = targetScale; // set the scale to the target scale
     }
 
-    void OnTriggerEnter(Collider other)
+    private void CheckForClick()
     {
-        if (other.CompareTag("RepairKit"))
+        if (Input.GetMouseButtonDown(0)) // Left mouse button click
         {
-            FindObjectOfType<GameManager>().CollectRepairKit(); // call CollectRepairKit function from GameManager
-            Destroy(other.gameObject); // destroy the repair kit
+            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                if (hit.collider.CompareTag("RepairKit"))
+                {
+                    FindObjectOfType<GameManager>().CollectRepairKit(); // call CollectRepairKit function from GameManager
+                    Destroy(hit.collider.gameObject); // destroy the repair kit
+                }
+                else if (hit.collider.CompareTag("Interactable"))
+                {
+                    // Call the open method on the interactable object
+                    hit.collider.GetComponent<InteractableObject>().Open();
+                }
+            }
+        }
+    }
+
+    private void CheckForPickupOrOpen()
+    {
+        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, interactionRange))
+        {
+            if (hit.collider.CompareTag("RepairKit"))
+            {
+                pickupText.enabled = true;
+                openText.enabled = false;
+            }
+            else if (hit.collider.CompareTag("Interactable"))
+            {
+                openText.enabled = true;
+                pickupText.enabled = false;
+            }
+            else
+            {
+                pickupText.enabled = false;
+                openText.enabled = false;
+            }
+        }
+        else
+        {
+            pickupText.enabled = false;
+            openText.enabled = false;
         }
     }
 }
