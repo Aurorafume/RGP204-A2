@@ -9,28 +9,33 @@ public class PlayerController : MonoBehaviour
     public float jumpForce; // force applied when player jumps
     public float jumpCooldown; // time between jumps
     public float airMultiplier; // how much faster player moves in the air
+    public float crouchHeight = 0.5f; // height of the player when crouching
+    public float crouchSpeed = 10f; // speed at which player crouches
+    public float playerHeight; // player's height
+    private bool isCrouching = false; // is the player crouching
     bool readyToJump; // is the player ready to jump
+    bool grounded; // is the player on the ground
+    float horizontalInput; // horizontal input from player
+    float verticalInput; // vertical input from player
 
     [HideInInspector] public float walkSpeed; // player's walk speed
     [HideInInspector] public float sprintSpeed; // player's sprint speed
 
     public KeyCode jumpKey = KeyCode.Space; // key to jump
+    public KeyCode crouchKey = KeyCode.LeftShift; // key to crouch
 
-    public float playerHeight; // player's height
     public LayerMask whatIsGround; // layer mask for ground
-    bool grounded; // is the player on the ground
-
     public Transform orientation; // player's orientation
-    float horizontalInput; // horizontal input from player
-    float verticalInput; // vertical input from player
     Vector3 moveDirection; // direction to move the player
     Rigidbody rb; // player's rigidbody
+    private Vector3 originalScale; // original scale of the player
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>(); // get the player's rigidbody
         rb.freezeRotation = true; // freeze rotation
         readyToJump = true; // set readyToJump to true
+        originalScale = transform.localScale; // store the original scale of the player
     }
 
     private void Update()
@@ -38,6 +43,7 @@ public class PlayerController : MonoBehaviour
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround); // check if player is grounded
         MyInput(); // get player input
         SpeedControl(); // control player speed
+        HandleCrouch(); // handle crouching
         if (grounded)
             rb.drag = groundDrag; // if player is grounded, add ground drag
         else
@@ -89,6 +95,50 @@ public class PlayerController : MonoBehaviour
     private void ResetJump()
     {
         readyToJump = true; // set readyToJump to true
+    }
+
+    private void HandleCrouch()
+    {
+        if (Input.GetKeyDown(crouchKey))
+        {
+            if (!isCrouching)
+            {
+                isCrouching = true; // set isCrouching to true
+                StopAllCoroutines(); // stop all coroutines
+                StartCoroutine(Crouch()); // start crouching
+            }
+        }
+        else if (Input.GetKeyUp(crouchKey))
+        {
+            if (isCrouching)
+            {
+                isCrouching = false; // set isCrouching to false
+                StopAllCoroutines(); // stop all coroutines
+                StartCoroutine(Uncrouch()); // start uncrouching
+            }
+        }
+    }
+
+    private IEnumerator Crouch()
+    {
+        Vector3 targetScale = new Vector3(originalScale.x, crouchHeight, originalScale.z); // set the target scale
+        while (transform.localScale.y > crouchHeight) 
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, crouchSpeed * Time.deltaTime); // lerp the scale
+            yield return null; // wait for the next frame
+        }
+        transform.localScale = targetScale; // set the scale to the target scale
+    }
+
+    private IEnumerator Uncrouch()
+    {
+        Vector3 targetScale = originalScale; // set the target scale
+        while (transform.localScale.y < originalScale.y)
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, crouchSpeed * Time.deltaTime); // lerp the scale
+            yield return null; // wait for the next frame
+        } 
+        transform.localScale = targetScale; // set the scale to the target scale
     }
 
     void OnTriggerEnter(Collider other)

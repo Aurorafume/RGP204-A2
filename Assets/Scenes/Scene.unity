@@ -1058,6 +1058,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   orientation: {fileID: 414159872}
+  crouchHeight: 0.5
+  crouchSpeed: 5
+  crouchKey: 304
 --- !u!136 &1040900662
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1881,13 +1884,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timeLeft: 45
   playerHealth: {fileID: 1040900663}
-  timerText: {fileID: 1792221299}
-  lightningBolt: {fileID: 722513553}
   repairKitPrefab: {fileID: 1956830668946618191, guid: f9ddbfa0ea4d70e4ea47efcfe2009fe5, type: 3}
   repairKitSpawnPoints:
   - {fileID: 1068971235}
   - {fileID: 2074463385}
   - {fileID: 478951622}
+  timerText: {fileID: 1792221299}
+  lightningBolt: {fileID: 722513553}
   balanceAmountText: {fileID: 1229312415}
   scoreAmountText: {fileID: 1678930727}
 --- !u!4 &1737107901
