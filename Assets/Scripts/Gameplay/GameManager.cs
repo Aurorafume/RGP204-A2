@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance;
+
     public float timeLeft = 45f; // 45 seconds
-    private int repairKitCount = 0; // Counter for collected repair kits
+    public int repairKitCount = 0; // Counter for collected repair kits
     private int lastSpawnIndex = -1; // Last spawn index for repair kits
 
     public PlayerHealth playerHealth; // Reference to the PlayerHealth script
@@ -22,6 +25,19 @@ public class GameManager : MonoBehaviour
     private Color darkGreen; // Dark green color
     private Color orange; // Orange color
     private Color red; // Red color
+
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Debug.Log("GameManager instance already exists, destroying new instance");
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {
@@ -115,6 +131,7 @@ public class GameManager : MonoBehaviour
         repairKitCount++; // Increment the repair kit counter
         UpdateBalanceUI(); // Update the balance display
         UpdateScoreUI(); // Update the score display
+        CloseInteractableObjects(); // Close the state of all interactable objects
         SpawnRepairKit();
     }
 
@@ -159,6 +176,17 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         Debug.Log("Game Over!");
-        // TODO: Implement game over logic
+        Cursor.lockState = CursorLockMode.None; // Unlock the cursor
+        Cursor.visible = true; // Make the cursor visible
+        SceneManager.LoadScene("CompletedGame"); // Directly load the CompletedGame scene
+    }
+
+    public void CloseInteractableObjects()
+    {
+        InteractableObject[] interactableObjects = FindObjectsOfType<InteractableObject>();
+        foreach (InteractableObject obj in interactableObjects)
+        {
+            obj.Close(); // Close the state of each interactable object
+        }
     }
 }

@@ -31,7 +31,7 @@ public class PlayerController : MonoBehaviour
     Rigidbody rb; // player's rigidbody
     private Vector3 originalScale; // original scale of the player
 
-    private Camera playerCamera; // camera used for raycasting
+    public Camera playerCamera; // camera used for raycasting
     public Text pickupText; // UI text element for pickup prompt
     public Text openText; // UI text element for open prompt
     public float interactionRange = 3f; // range within which the player can interact with objects
@@ -72,7 +72,7 @@ public class PlayerController : MonoBehaviour
     {
         horizontalInput = Input.GetAxisRaw("Horizontal"); // get horizontal input
         verticalInput = Input.GetAxisRaw("Vertical"); // get vertical input
-        if(Input.GetKey(jumpKey) && readyToJump && grounded) 
+        if (Input.GetKey(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false; // if player presses jump key, set readyToJump to false
             Jump(); // jump
@@ -83,16 +83,16 @@ public class PlayerController : MonoBehaviour
     private void MovePlayer()
     {
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput; // get the direction to move the player
-        if(grounded)
+        if (grounded)
             rb.AddForce(moveDirection.normalized * playerSpeed * 10f, ForceMode.Force); // if the player is grounded, move the player
-        else if(!grounded)
+        else if (!grounded)
             rb.AddForce(moveDirection.normalized * playerSpeed * 10f * airMultiplier, ForceMode.Force); // if the player is not grounded, move the player faster
     }
 
     private void SpeedControl()
     {
         Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z); // get the player's velocity
-        if(flatVel.magnitude > playerSpeed)
+        if (flatVel.magnitude > playerSpeed)
         {
             Vector3 limitedVel = flatVel.normalized * playerSpeed; // if the player's velocity is greater than the max speed, limit the velocity
             rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z); // set the player's velocity
@@ -104,7 +104,7 @@ public class PlayerController : MonoBehaviour
         rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z); // reset the player's velocity
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse); // add force to make the player jump
     }
-    
+
     private void ResetJump()
     {
         readyToJump = true; // set readyToJump to true
@@ -135,7 +135,7 @@ public class PlayerController : MonoBehaviour
     private IEnumerator Crouch()
     {
         Vector3 targetScale = new Vector3(originalScale.x, crouchHeight, originalScale.z); // set the target scale
-        while (transform.localScale.y > crouchHeight) 
+        while (transform.localScale.y > crouchHeight)
         {
             transform.localScale = Vector3.Lerp(transform.localScale, targetScale, crouchSpeed * Time.deltaTime); // lerp the scale
             yield return null; // wait for the next frame
@@ -150,26 +150,37 @@ public class PlayerController : MonoBehaviour
         {
             transform.localScale = Vector3.Lerp(transform.localScale, targetScale, crouchSpeed * Time.deltaTime); // lerp the scale
             yield return null; // wait for the next frame
-        } 
+        }
         transform.localScale = targetScale; // set the scale to the target scale
     }
 
     private void CheckForClick()
     {
-        if (Input.GetMouseButtonDown(0)) // Left mouse button click
+        if (Input.GetMouseButtonDown(0)) // Check for left mouse button click
         {
             Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 if (hit.collider.CompareTag("RepairKit"))
                 {
-                    FindObjectOfType<GameManager>().CollectRepairKit(); // call CollectRepairKit function from GameManager
-                    Destroy(hit.collider.gameObject); // destroy the repair kit
+                    FindObjectOfType<GameManager>().CollectRepairKit(); // Call CollectRepairKit function from GameManager
+                    Destroy(hit.collider.gameObject); // Destroy the repair kit
                 }
-                else if (hit.collider.CompareTag("Interactable"))
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.E)) // Check for 'E' key press
+        {
+            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                if (hit.collider.CompareTag("Interactable"))
                 {
-                    // Call the open method on the interactable object
-                    hit.collider.GetComponent<InteractableObject>().Open();
+                    var interactable = hit.collider.GetComponent<InteractableObject>();
+                    if (interactable != null)
+                    {
+                        interactable.ResetState();
+                    }
                 }
             }
         }
