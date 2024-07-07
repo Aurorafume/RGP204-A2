@@ -5,181 +5,192 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
-    public float playerSpeed; // player's max speed
-    public float groundDrag; // drag when player is on the ground
-    public float jumpForce; // force applied when player jumps
-    public float jumpCooldown; // time between jumps
-    public float airMultiplier; // how much faster player moves in the air
-    public float crouchHeight = 0.5f; // height of the player when crouching
-    public float crouchSpeed = 10f; // speed at which player crouches
-    public float playerHeight; // player's height
-    private bool isCrouching = false; // is the player crouching
-    bool readyToJump; // is the player ready to jump
-    bool grounded; // is the player on the ground
-    float horizontalInput; // horizontal input from player
-    float verticalInput; // vertical input from player
+    // Public variables for player movement and interaction settings
+    public float playerSpeed;
+    public float groundDrag;
+    public float jumpForce;
+    public float jumpCooldown;
+    public float airMultiplier;
+    public float crouchHeight = 0.5f;
+    public float crouchSpeed = 10f;
+    public float playerHeight;
 
-    [HideInInspector] public float walkSpeed; // player's walk speed
-    [HideInInspector] public float sprintSpeed; // player's sprint speed
+    // Private variables for managing player state
+    private bool isCrouching = false;
+    bool readyToJump;
+    bool grounded;
+    float horizontalInput;
+    float verticalInput;
 
-    public KeyCode jumpKey = KeyCode.Space; // key to jump
-    public KeyCode crouchKey = KeyCode.LeftShift; // key to crouch
+    // Public variables for key bindings
+    public KeyCode jumpKey = KeyCode.Space;
+    public KeyCode crouchKey = KeyCode.LeftShift;
 
-    public LayerMask whatIsGround; // layer mask for ground
-    public Transform orientation; // player's orientation
-    Vector3 moveDirection; // direction to move the player
-    Rigidbody rb; // player's rigidbody
-    private Vector3 originalScale; // original scale of the player
+    // Public variables for managing ground detection and orientation
+    public LayerMask whatIsGround;
+    public Transform orientation;
+    Vector3 moveDirection;
+    Rigidbody rb;
+    private Vector3 originalScale;
 
-    public Camera playerCamera; // camera used for raycasting
-    public Text pickupText; // UI text element for pickup prompt
-    public Text openText; // UI text element for open prompt
-    public float interactionRange = 3f; // range within which the player can interact with objects
+    // Public variables for interaction
+    public Camera playerCamera;
+    public Text pickupText;
+    public Text openText;
+    public float interactionRange = 3f;
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody>(); // get the player's rigidbody
-        rb.freezeRotation = true; // freeze rotation
-        readyToJump = true; // set readyToJump to true
-        originalScale = transform.localScale; // store the original scale of the player
+        rb = GetComponent<Rigidbody>();
+        rb.freezeRotation = true;
+        readyToJump = true;
+        originalScale = transform.localScale;
 
-        playerCamera = Camera.main; // get the main camera
-        pickupText.enabled = false; // initially hide the pickup text
-        openText.enabled = false; // initially hide the open text
+        playerCamera = Camera.main;
+        pickupText.enabled = false;
+        openText.enabled = false;
     }
 
     private void Update()
     {
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround); // check if player is grounded
-        MyInput(); // get player input
-        SpeedControl(); // control player speed
-        HandleCrouch(); // handle crouching
-        if (grounded)
-            rb.drag = groundDrag; // if player is grounded, add ground drag
-        else
-            rb.drag = 0; // else, remove ground drag
+        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround); // Check if the player is grounded
+        MyInput();
+        SpeedControl();
+        HandleCrouch();
+        
+        rb.drag = grounded ? groundDrag : 0; // Change the drag value based on player state
 
-        CheckForClick(); // check for mouse click
-        CheckForPickupOrOpen(); // check if player is looking at a repair kit or interactable object
+        CheckForClick();
+        CheckForPickupOrOpen();
     }
 
     private void FixedUpdate()
     {
-        MovePlayer(); // move the player
+        MovePlayer();
     }
 
     private void MyInput()
     {
-        horizontalInput = Input.GetAxisRaw("Horizontal"); // get horizontal input
-        verticalInput = Input.GetAxisRaw("Vertical"); // get vertical input
+        horizontalInput = Input.GetAxisRaw("Horizontal");
+        verticalInput = Input.GetAxisRaw("Vertical");
+        
         if (Input.GetKey(jumpKey) && readyToJump && grounded)
         {
-            readyToJump = false; // if player presses jump key, set readyToJump to false
-            Jump(); // jump
-            Invoke(nameof(ResetJump), jumpCooldown); // set a delay before player can jump again
+            readyToJump = false; // Set the jump cooldown
+            Jump(); // Jump
+            Invoke(nameof(ResetJump), jumpCooldown); // Reset the jump cooldown
         }
     }
 
     private void MovePlayer()
     {
-        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput; // get the direction to move the player
+        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput; // Calculate the move direction
+        
         if (grounded)
-            rb.AddForce(moveDirection.normalized * playerSpeed * 10f, ForceMode.Force); // if the player is grounded, move the player
-        else if (!grounded)
-            rb.AddForce(moveDirection.normalized * playerSpeed * 10f * airMultiplier, ForceMode.Force); // if the player is not grounded, move the player faster
+            rb.AddForce(moveDirection.normalized * playerSpeed * 10f, ForceMode.Force); // Move the player
+        else
+            rb.AddForce(moveDirection.normalized * playerSpeed * 10f * airMultiplier, ForceMode.Force); // Move the player in the air
     }
 
     private void SpeedControl()
     {
-        Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z); // get the player's velocity
+        Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z); // Calculate the flat velocity
+         
         if (flatVel.magnitude > playerSpeed)
         {
-            Vector3 limitedVel = flatVel.normalized * playerSpeed; // if the player's velocity is greater than the max speed, limit the velocity
-            rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z); // set the player's velocity
+            Vector3 limitedVel = flatVel.normalized * playerSpeed; // Limit the velocity
+            rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z); // Set the limited velocity
         }
     }
 
     private void Jump()
     {
-        rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z); // reset the player's velocity
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse); // add force to make the player jump
+        rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z); // Reset the vertical velocity
+        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse); // Add the jump force
     }
 
     private void ResetJump()
     {
-        readyToJump = true; // set readyToJump to true
+        readyToJump = true;
     }
 
     private void HandleCrouch()
     {
-        if (Input.GetKeyDown(crouchKey))
+        if (Input.GetKeyDown(crouchKey)) // Check if the crouch key is pressed
         {
             if (!isCrouching)
             {
-                isCrouching = true; // set isCrouching to true
-                StopAllCoroutines(); // stop all coroutines
-                StartCoroutine(Crouch()); // start crouching
+                isCrouching = true; // Set the crouching state
+                StopAllCoroutines(); // Stop all coroutines
+                StartCoroutine(Crouch());  // Start the crouch coroutine
             }
-        }
-        else if (Input.GetKeyUp(crouchKey))
+        } 
+        else if (Input.GetKeyUp(crouchKey)) // Check if the crouch key is released
         {
             if (isCrouching)
             {
-                isCrouching = false; // set isCrouching to false
-                StopAllCoroutines(); // stop all coroutines
-                StartCoroutine(Uncrouch()); // start uncrouching
+                isCrouching = false; // Reset the crouching state
+                StopAllCoroutines(); // Stop all coroutines
+                StartCoroutine(Uncrouch()); // Start the uncrouch coroutine
             }
         }
     }
 
     private IEnumerator Crouch()
     {
-        Vector3 targetScale = new Vector3(originalScale.x, crouchHeight, originalScale.z); // set the target scale
+        Vector3 targetScale = new Vector3(originalScale.x, crouchHeight, originalScale.z); // Calculate the target scale
+        
         while (transform.localScale.y > crouchHeight)
         {
-            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, crouchSpeed * Time.deltaTime); // lerp the scale
-            yield return null; // wait for the next frame
+            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, crouchSpeed * Time.deltaTime); // Lerp the scale
+            yield return null; // Wait for the next frame
         }
-        transform.localScale = targetScale; // set the scale to the target scale
+        
+        transform.localScale = targetScale; // Set the scale to the target scale
     }
 
     private IEnumerator Uncrouch()
     {
-        Vector3 targetScale = originalScale; // set the target scale
+        Vector3 targetScale = originalScale; // Calculate the target scale
+        
         while (transform.localScale.y < originalScale.y)
         {
-            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, crouchSpeed * Time.deltaTime); // lerp the scale
-            yield return null; // wait for the next frame
+            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, crouchSpeed * Time.deltaTime); // Lerp the scale
+            yield return null; // Wait for the next frame
         }
-        transform.localScale = targetScale; // set the scale to the target scale
+        
+        transform.localScale = targetScale; // Set the scale to the target scale
     }
 
     private void CheckForClick()
     {
-        if (Input.GetMouseButtonDown(0)) // Check for left mouse button click
+        if (Input.GetMouseButtonDown(0))
         {
-            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition); // Cast a ray from the camera to the mouse position
+            
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 if (hit.collider.CompareTag("RepairKit"))
                 {
-                    FindObjectOfType<GameManager>().CollectRepairKit(); // Call CollectRepairKit function from GameManager
+                    FindObjectOfType<GameManager>().CollectRepairKit(); // Call the CollectRepairKit function
                     Destroy(hit.collider.gameObject); // Destroy the repair kit
                 }
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.E)) // Check for 'E' key press
+        if (Input.GetKeyDown(KeyCode.E))
         {
-            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition); // Cast a ray from the camera to the mouse position
+            
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 if (hit.collider.CompareTag("Interactable"))
                 {
-                    var interactable = hit.collider.GetComponent<InteractableObject>();
+                    var interactable = hit.collider.GetComponent<InteractableObject>(); // Get the interactable object component
+                    
                     if (interactable != null)
                     {
-                        interactable.ResetState();
+                        interactable.ResetState(); // Call the ResetState function
                     }
                 }
             }
@@ -188,29 +199,30 @@ public class PlayerController : MonoBehaviour
 
     private void CheckForPickupOrOpen()
     {
-        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition); // Cast a ray from the camera to the mouse position
+        
         if (Physics.Raycast(ray, out RaycastHit hit, interactionRange))
         {
             if (hit.collider.CompareTag("RepairKit"))
             {
-                pickupText.enabled = true;
-                openText.enabled = false;
+                pickupText.enabled = true; // Enable the pickup text
+                openText.enabled = false; // Disable the open text
             }
             else if (hit.collider.CompareTag("Interactable"))
             {
-                openText.enabled = true;
-                pickupText.enabled = false;
+                openText.enabled = true; // Enable the open text
+                pickupText.enabled = false; // Disable the pickup text
             }
             else
             {
-                pickupText.enabled = false;
-                openText.enabled = false;
-            }
+                pickupText.enabled = false; // Disable the pickup text
+                openText.enabled = false; // Disable the open text
+            } 
         }
         else
         {
-            pickupText.enabled = false;
-            openText.enabled = false;
+            pickupText.enabled = false; // Disable the pickup text
+            openText.enabled = false; // Disable the open text
         }
     }
 }

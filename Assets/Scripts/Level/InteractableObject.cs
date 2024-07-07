@@ -10,11 +10,12 @@ public class InteractableObject : MonoBehaviour
         Drawer
     }
 
+    // Public variables for the door settings
     public OpenDirection openDirection;
     private bool isOpen = false;
     public float openAngle = 90f;
     public float openSpeed = 2f;
-    private float epsilon = 0.01f; // small value to compare floats
+    private float epsilon = 0.01f; 
     private Quaternion closedRotation;
     private Quaternion openRotation;
     private Vector3 closedPosition;
@@ -22,19 +23,19 @@ public class InteractableObject : MonoBehaviour
 
     private void Start()
     {
-        closedRotation = transform.localRotation;
-        closedPosition = transform.localPosition;
+        closedRotation = transform.localRotation; // Set the closed rotation to the initial rotation
+        closedPosition = transform.localPosition; // Set the closed position to the initial position
 
         switch (openDirection)
         {
             case OpenDirection.Left:
-                openRotation = Quaternion.Euler(transform.localEulerAngles + new Vector3(0, -openAngle, 0));
+                openRotation = Quaternion.Euler(transform.localEulerAngles + new Vector3(0, -openAngle, 0)); // Set the open rotation to the left
                 break;
             case OpenDirection.Right:
-                openRotation = Quaternion.Euler(transform.localEulerAngles + new Vector3(0, openAngle, 0));
+                openRotation = Quaternion.Euler(transform.localEulerAngles + new Vector3(0, openAngle, 0)); // Set the open rotation to the right
                 break;
             case OpenDirection.Drawer:
-                openPosition = transform.localPosition + transform.forward * 0.5f; // Adjust 0.5f to the desired slide distance
+                openPosition = transform.localPosition + transform.forward * 0.5f; // Set the open position for the drawer
                 break;
         }
     }
@@ -43,14 +44,14 @@ public class InteractableObject : MonoBehaviour
     {
         if (!isOpen)
         {
-            StopAllCoroutines();
+            StopAllCoroutines(); // Stop all coroutines
             if (openDirection == OpenDirection.Drawer)
             {
-                StartCoroutine(SlideOpenRoutine());
+                StartCoroutine(SlideOpenRoutine()); // Start the slide open coroutine
             }
             else
             {
-                StartCoroutine(OpenRoutine());
+                StartCoroutine(OpenRoutine()); // Start the open coroutine
             }
         }
     }
@@ -59,14 +60,14 @@ public class InteractableObject : MonoBehaviour
     {
         if (isOpen)
         {
-            StopAllCoroutines();
+            StopAllCoroutines(); // Stop all coroutines
             if (openDirection == OpenDirection.Drawer)
             {
-                StartCoroutine(SlideCloseRoutine());
+                StartCoroutine(SlideCloseRoutine()); // Start the slide close coroutine
             }
             else
             {
-                StartCoroutine(CloseRoutine());
+                StartCoroutine(CloseRoutine()); // Start the close coroutine
             }
         }
     }
@@ -75,41 +76,41 @@ public class InteractableObject : MonoBehaviour
     {
         while (Quaternion.Angle(transform.localRotation, openRotation) > epsilon)
         {
-            transform.localRotation = Quaternion.Slerp(transform.localRotation, openRotation, Time.deltaTime * openSpeed);
-            yield return null;
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, openRotation, Time.deltaTime * openSpeed); // Slerp the rotation
+            yield return null; // Wait for the next frame
         }
-        transform.localRotation = openRotation;
-        isOpen = true;
+        transform.localRotation = openRotation; // Set the rotation to the open rotation
+        isOpen = true; // Set the open state to true
     }
 
     private IEnumerator SlideOpenRoutine()
     {
         while (Vector3.Distance(transform.localPosition, openPosition) > epsilon)
         {
-            transform.localPosition = Vector3.Lerp(transform.localPosition, openPosition, Time.deltaTime * openSpeed);
-            yield return null;
+            transform.localPosition = Vector3.Lerp(transform.localPosition, openPosition, Time.deltaTime * openSpeed); // Lerp the position
+            yield return null; // Wait for the next frame
         }
-        transform.localPosition = openPosition;
-        isOpen = true;
-    }
+        transform.localPosition = openPosition; // Set the position to the open position
+        isOpen = true; // Set the open state to true
+    } 
 
     public void ResetState()
     {
         if (isOpen)
         {
-            StopAllCoroutines();
+            StopAllCoroutines(); // Stop all coroutines
             if (openDirection == OpenDirection.Drawer)
-            {
-                StartCoroutine(SlideCloseRoutine());
+            { 
+                StartCoroutine(SlideCloseRoutine()); // Start the slide close coroutine
             }
             else
             {
-                StartCoroutine(CloseRoutine());
+                StartCoroutine(CloseRoutine()); // Start the close coroutine
             }
         }
         else
         {
-            Open();
+            Open(); // Open the door
         }
     }
 
@@ -117,21 +118,21 @@ public class InteractableObject : MonoBehaviour
     {
         while (Quaternion.Angle(transform.localRotation, closedRotation) > epsilon)
         {
-            transform.localRotation = Quaternion.Slerp(transform.localRotation, closedRotation, Time.deltaTime * openSpeed);
-            yield return null;
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, closedRotation, Time.deltaTime * openSpeed); // Slerp the rotation
+            yield return null; // Wait for the next frame
         }
-        transform.localRotation = closedRotation;
-        isOpen = false;
+        transform.localRotation = closedRotation; // Set the rotation to the closed rotation
+        isOpen = false; // Set the open state to false
     }
 
     private IEnumerator SlideCloseRoutine()
     {
         while (Vector3.Distance(transform.localPosition, closedPosition) > epsilon)
         {
-            transform.localPosition = Vector3.Lerp(transform.localPosition, closedPosition, Time.deltaTime * openSpeed);
-            yield return null;
+            transform.localPosition = Vector3.Lerp(transform.localPosition, closedPosition, Time.deltaTime * openSpeed); // Lerp the position
+            yield return null; // Wait for the next frame
         }
-        transform.localPosition = closedPosition;
-        isOpen = false;
-    }
+        transform.localPosition = closedPosition; // Set the position to the closed position
+        isOpen = false; // Set the open state to false
+    } 
 }
